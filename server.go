@@ -260,7 +260,8 @@ func (srv *Server) accept(l net.Listener, r Runner, h Handler) error {
 	}
 
 	atomic.AddInt32(&srv.conns, 1)
-	go srv.serve(c, r, h)
+	// go srv.serve(c, r, h)
+	srv.serve(c, r, h)
 
 	return nil
 }
@@ -279,6 +280,7 @@ func (srv *Server) serve(c *conn, r Runner, h Handler) {
 		// client connection closed.
 		case entry := <-rcvr.C():
 			if entry.err != nil {
+				println(entry.err.Error())
 				atomic.AddInt32(&srv.conns, -1)
 				return
 			}

@@ -189,6 +189,7 @@ func (r *Request) ReadFrom(rd io.Reader) (n int64, err error) {
 
 	contentlen := int64(r.Header.Len() - headerlen)
 	if contentlen < 0 {
+		fmt.Println("!!! %s", contentlen)
 		return n, ErrCorruptedHeader
 	}
 

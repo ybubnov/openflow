@@ -1,5 +1,9 @@
 package openflow
 
+import (
+	"sync"
+)
+
 // Runner describes types used to start a function according to the
 // defined concurrency model.
 type Runner interface {
@@ -27,4 +31,37 @@ type SequentialRunner struct{}
 // Run starts a function as is. This method implements Runner interface.
 func (_ SequentialRunner) Run(fn func()) {
 	fn()
+}
+
+type MultiRoutineRunner struct {
+	num  int
+	q    chan func()
+	once sync.Once
+}
+
+func NewMultiRoutineRunner(num int) *MultiRoutineRunner {
+	if num <= 0 {
+		panic("number of routines must be positive")
+	}
+	return &MultiRoutineRunner{
+		num: num,
+		q:   make(chan func(), num),
+	}
+}
+
+func (mrr *MultiRoutineRunner) init() {
+	for i := 0; i < mrr.num; i++ {
+		go mrr.runner()
+	}
+}
+
+func (mrr *MultiRoutineRunner) runner() {
+	for fn := range mrr.q {
+		fn()
+	}
+}
+
+func (mrr *MultiRoutineRunner) Run(fn func()) {
+	mrr.once.Do(mrr.init)
+	mrr.q <- fn
 }
